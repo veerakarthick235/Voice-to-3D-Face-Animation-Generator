@@ -114,18 +114,17 @@ const VoiceToFaceApp = () => {
       }
       
       const pcmBase64 = btoa(binaryString);
-        
-        // Send to backend
-        const response = await axios.post(`${API}/animate/audio`, {
-          audio_data: pcmBase64,
-          sample_rate: audioContext.sampleRate,
-          fps: 30
-        });
+      
+      // Send to backend
+      const response = await axios.post(`${API}/animate/audio`, {
+        audio_data: pcmBase64,
+        sample_rate: audioContext.sampleRate,
+        fps: 30
+      });
 
-        setAnimationData(response.data);
-        setCurrentFrame(0);
-        toast.success(`Animation generated! ${response.data.total_frames} frames`);
-      };
+      setAnimationData(response.data);
+      setCurrentFrame(0);
+      toast.success(`Animation generated! ${response.data.total_frames} frames`);
     } catch (error) {
       console.error('Error processing audio:', error);
       toast.error('Failed to process audio');
