@@ -66,5 +66,3 @@ A full-stack application that converts **live speech audio** or **text** into **
 - **3D Graphics**: WebGL, Three.js
 
 ---
-
-Built with ❤️ using Emergent AI Platform
