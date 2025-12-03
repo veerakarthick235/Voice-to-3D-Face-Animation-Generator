@@ -91,27 +91,29 @@ const VoiceToFaceApp = () => {
   const processAudioBlob = async (audioBlob) => {
     setIsProcessing(true);
     try {
-      // Convert audio to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
+      // Convert WebM to PCM using Web Audio API
+      const audioContext = new AudioContext();
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
       
-      reader.onloadend = async () => {
-        const base64Audio = reader.result;
-        
-        // For demo, we'll convert WebM to PCM using Web Audio API
-        const audioContext = new AudioContext();
-        const arrayBuffer = await audioBlob.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        
-        // Get PCM data
-        const pcmData = audioBuffer.getChannelData(0);
-        const pcm16 = new Int16Array(pcmData.length);
-        for (let i = 0; i < pcmData.length; i++) {
-          pcm16[i] = Math.max(-32768, Math.min(32767, pcmData[i] * 32768));
-        }
-        
-        // Convert to base64
-        const pcmBase64 = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+      // Get PCM data
+      const pcmData = audioBuffer.getChannelData(0);
+      const pcm16 = new Int16Array(pcmData.length);
+      for (let i = 0; i < pcmData.length; i++) {
+        pcm16[i] = Math.max(-32768, Math.min(32767, pcmData[i] * 32768));
+      }
+      
+      // Convert to base64 in chunks to avoid stack overflow
+      const uint8Array = new Uint8Array(pcm16.buffer);
+      const chunkSize = 8192; // Process 8KB at a time
+      let binaryString = '';
+      
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
+        binaryString += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      
+      const pcmBase64 = btoa(binaryString);
         
         // Send to backend
         const response = await axios.post(`${API}/animate/audio`, {
